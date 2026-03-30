@@ -1,0 +1,13 @@
+Prepare a concise stock analysis answer for the user.
+
+User query:
+{query}
+
+Structured analysis payload:
+{payload_json}
+
+Write a direct answer that:
+- starts with the recommendation
+- explains the main supporting signals
+- ends with the key risk
+- stays grounded in the provided data only

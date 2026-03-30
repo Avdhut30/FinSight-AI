@@ -1,0 +1,500 @@
+INFO:     Started server process [11836]
+INFO:     Waiting for application startup.
+2026-03-27 02:12:18,766 | INFO | app.main | request_id=- | Application startup complete.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-03-27 02:12:18,790 | INFO | app.core.request_context | request_id=a59603ab-d9e1-4488-aa5a-f8d5fa23033c | Request started method=GET path=/ client_ip=127.0.0.1
+2026-03-27 02:12:18,860 | INFO | app.core.request_context | request_id=a59603ab-d9e1-4488-aa5a-f8d5fa23033c | Request completed method=GET path=/ status_code=200 duration_ms=65.29 client_ip=127.0.0.1
+2026-03-27 02:12:18,961 | INFO | app.core.request_context | request_id=0100a2ed-86ef-4fde-bb9a-35a4c4788e05 | Request started method=GET path=/favicon.ico client_ip=127.0.0.1
+2026-03-27 02:12:18,971 | INFO | app.core.request_context | request_id=0100a2ed-86ef-4fde-bb9a-35a4c4788e05 | Request completed method=GET path=/favicon.ico status_code=404 duration_ms=8.12 client_ip=127.0.0.1
+2026-03-27 02:12:21,100 | INFO | app.core.request_context | request_id=07e8e3c2-098b-49b7-a73a-19cf7974dd1c | Request started method=GET path=/ client_ip=127.0.0.1
+2026-03-27 02:12:21,108 | INFO | app.core.request_context | request_id=07e8e3c2-098b-49b7-a73a-19cf7974dd1c | Request completed method=GET path=/ status_code=200 duration_ms=7.37 client_ip=127.0.0.1
+2026-03-27 02:12:28,094 | INFO | app.core.request_context | request_id=ae9cccd0-3f1b-4905-a5c8-8d12c2e27fc3 | Request started method=GET path=/api/v1/health client_ip=127.0.0.1
+2026-03-27 02:12:28,100 | INFO | app.core.request_context | request_id=ae9cccd0-3f1b-4905-a5c8-8d12c2e27fc3 | Request completed method=GET path=/api/v1/health status_code=200 duration_ms=9.45 client_ip=127.0.0.1
+2026-03-27 02:12:45,447 | INFO | app.core.request_context | request_id=8da5d50b-14d0-4dab-afa2-092ef3f9304a | Request started method=OPTIONS path=/api/v1/watchlist client_ip=127.0.0.1
+2026-03-27 02:12:45,454 | INFO | app.core.request_context | request_id=5667540b-dc91-4a4b-b3c7-9c28dea3aead | Request started method=OPTIONS path=/api/v1/watchlist client_ip=127.0.0.1
+2026-03-27 02:12:45,461 | INFO | app.core.request_context | request_id=8da5d50b-14d0-4dab-afa2-092ef3f9304a | Request completed method=OPTIONS path=/api/v1/watchlist status_code=200 duration_ms=14.71 client_ip=127.0.0.1
+2026-03-27 02:12:45,461 | INFO | app.core.request_context | request_id=5667540b-dc91-4a4b-b3c7-9c28dea3aead | Request completed method=OPTIONS path=/api/v1/watchlist status_code=200 duration_ms=7.56 client_ip=127.0.0.1
+2026-03-27 02:12:45,464 | INFO | app.core.request_context | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Request started method=GET path=/api/v1/watchlist client_ip=127.0.0.1
+2026-03-27 02:12:58,604 | ERROR | app.services.stock_service | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Failed to fetch stock data for ICICIBANK.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:12:58,632 | ERROR | app.services.stock_service | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Failed to fetch stock data for TCS.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:12:58,642 | ERROR | app.services.stock_service | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Failed to fetch stock data for HDFCBANK.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:12:58,657 | ERROR | app.services.stock_service | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Failed to fetch stock data for RELIANCE.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:12:59,200 | ERROR | app.services.stock_service | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Failed to fetch stock data for INFY.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:12:59,211 | INFO | app.core.request_context | request_id=b92df094-2a7e-41db-8d61-c4ba50e20182 | Request completed method=GET path=/api/v1/watchlist status_code=200 duration_ms=13747.75 client_ip=127.0.0.1
+2026-03-27 02:12:59,215 | INFO | app.core.request_context | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Request started method=GET path=/api/v1/watchlist client_ip=127.0.0.1
+2026-03-27 02:13:01,023 | ERROR | app.services.stock_service | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Failed to fetch stock data for ICICIBANK.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:13:01,036 | ERROR | app.services.stock_service | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Failed to fetch stock data for TCS.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:13:01,036 | ERROR | app.services.stock_service | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Failed to fetch stock data for INFY.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:13:01,045 | ERROR | app.services.stock_service | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Failed to fetch stock data for RELIANCE.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:13:01,136 | ERROR | app.services.stock_service | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Failed to fetch stock data for HDFCBANK.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:13:01,143 | INFO | app.core.request_context | request_id=52ef2e2e-4951-40a3-8294-bdc25fa0090b | Request completed method=GET path=/api/v1/watchlist status_code=200 duration_ms=1924.01 client_ip=127.0.0.1
+2026-03-27 02:14:31,458 | INFO | app.core.request_context | request_id=cd44ddfa-d7e0-433c-af18-01c499c1007b | Request started method=OPTIONS path=/api/v1/analyze/stream client_ip=127.0.0.1
+2026-03-27 02:14:31,462 | INFO | app.core.request_context | request_id=cd44ddfa-d7e0-433c-af18-01c499c1007b | Request completed method=OPTIONS path=/api/v1/analyze/stream status_code=200 duration_ms=3.15 client_ip=127.0.0.1
+2026-03-27 02:14:31,462 | INFO | app.core.request_context | request_id=503cded0-0f47-4c73-b6d1-ceda0e23afa1 | Request started method=POST path=/api/v1/analyze/stream client_ip=127.0.0.1
+2026-03-27 02:14:33,123 | INFO | app.agents.stock_agent | request_id=503cded0-0f47-4c73-b6d1-ceda0e23afa1 | Analysis requested query='should i buy infosys stocks now?' explicit_ticker=None use_llm=True
+2026-03-27 02:14:33,126 | INFO | app.agents.stock_agent | request_id=503cded0-0f47-4c73-b6d1-ceda0e23afa1 | Ticker resolved query='should i buy infosys stocks now?' ticker=INFY.NS
+2026-03-27 02:14:39,458 | ERROR | app.services.stock_service | request_id=503cded0-0f47-4c73-b6d1-ceda0e23afa1 | Failed to fetch stock data for INFY.NS
+Traceback (most recent call last):
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 25, in get_snapshot
+    return await asyncio.to_thread(self._get_snapshot_sync, ticker)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\app\services\stock_service.py", line 38, in _get_snapshot_sync
+    info = asset.info or {}
+           ^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\ticker.py", line 159, in info
+    return self.get_info()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\base.py", line 244, in get_info
+    data = self._quote.info
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 508, in info
+    self._fetch_info(self.proxy)
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 609, in _fetch_info
+    result = self._fetch(proxy, modules=modules)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 587, in _fetch
+    result = self._data.get_raw_json(_QUOTE_SUMMARY_URL_ + f"/{self._symbol}", user_agent_headers=self._data.user_agent_headers, params=params_dict, proxy=proxy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 430, in get_raw_json
+    response = self.get(url, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 349, in get
+    return self._make_request(url, request_method = self._session.get, user_agent_headers=user_agent_headers, params=params, proxy=proxy, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\utils.py", line 104, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Avdhut Shinde\AI Projects\FinSight-AI\backend\.venv\Lib\site-packages\yfinance\data.py", line 411, in _make_request
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+2026-03-27 02:14:39,468 | INFO | app.core.request_context | request_id=503cded0-0f47-4c73-b6d1-ceda0e23afa1 | Request completed method=POST path=/api/v1/analyze/stream status_code=200 duration_ms=8005.59 client_ip=127.0.0.1
