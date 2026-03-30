@@ -5,14 +5,19 @@ __pycache__/
 .venv/
 backend/.env
 backend/stock_ai.db
+.env
+.env.*
+frontend/.env
+backend/.env.*
+docker-compose.override.yml
 
 # Node
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
 # OS / editors
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
-
