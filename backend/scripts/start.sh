@@ -13,16 +13,19 @@ import time
 import psycopg
 
 url = os.environ["DATABASE_URL"].replace("postgresql+psycopg://", "postgresql://")
-for attempt in range(10):
+max_attempts = int(os.getenv("DB_WAIT_ATTEMPTS", "30"))
+interval = float(os.getenv("DB_WAIT_INTERVAL", "3"))
+
+for attempt in range(max_attempts):
     try:
-        with psycopg.connect(url, connect_timeout=3):
+        with psycopg.connect(url, connect_timeout=5):
             print("Database ready.")
             break
     except Exception as exc:
-        print(f"Waiting for database... ({attempt + 1}/10) {exc}")
-        time.sleep(2)
+        print(f"Waiting for database... ({attempt + 1}/{max_attempts}) {exc}")
+        time.sleep(interval)
 else:
-    raise SystemExit("Database did not become ready in time.")
+    raise SystemExit(f"Database did not become ready in time after {max_attempts} attempts.")
 PY
 
 alembic upgrade head
