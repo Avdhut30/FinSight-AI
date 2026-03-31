@@ -15,3 +15,5 @@ services:
         value: production
       - key: LOG_LEVEL
         value: INFO
+      - key: PYTHON_VERSION
+        value: "3.11"
