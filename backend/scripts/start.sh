@@ -1,5 +1,11 @@
 #!/bin/sh
+# Robust startup for local, Docker, and Render.
 set -eu
+
+# Always run from backend root so imports and alembic paths resolve.
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$PROJECT_ROOT"
+export PYTHONPATH="$PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 python - <<'PY'
 import os

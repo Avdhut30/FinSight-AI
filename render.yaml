@@ -2,7 +2,7 @@ services:
   - type: web
     name: finsight-backend
     env: python
-    rootDirectory: backend
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: ./scripts/start.sh
     envVars:
