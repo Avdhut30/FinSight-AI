@@ -9,7 +9,7 @@ import type {
   WatchlistResponse
 } from "../types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL;
 const REQUEST_ID_HEADER = "X-Request-ID";
 
 type AnalysisStreamStatus = {
@@ -121,7 +121,7 @@ function handleStreamEvent(
 }
 
 async function request<T>(path: string, init?: RequestOptions): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, buildJsonInit(init));
+  const response = await fetch(`${API_URL}${path}`, buildJsonInit(init));
 
   if (!response.ok) {
     throw await createRequestError(response);
@@ -146,7 +146,7 @@ export async function analyzeStockStream(
   token?: string | null
 ): Promise<AnalyzeResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/analyze/stream`,
+    `${API_URL}/api/v1/analyze/stream`,
     buildJsonInit({
       method: "POST",
       body: JSON.stringify({ query, use_llm: false }),
