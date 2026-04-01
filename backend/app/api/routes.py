@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -43,7 +44,7 @@ def _format_sse(event: str, data: dict[str, object]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
-def _parse_bearer_token(authorization: str | None) -> str | None:
+def _parse_bearer_token(authorization: Optional[str]) -> Optional[str]:
     if not authorization:
         return None
     scheme, _, token = authorization.partition(" ")
@@ -52,11 +53,11 @@ def _parse_bearer_token(authorization: str | None) -> str | None:
     return token.strip()
 
 
-def _resolve_optional_user(db: Session, auth_service, authorization: str | None):
+def _resolve_optional_user(db: Session, auth_service, authorization: Optional[str]):
     return auth_service.authenticate(db, _parse_bearer_token(authorization))
 
 
-def _require_user(db: Session, auth_service, authorization: str | None):
+def _require_user(db: Session, auth_service, authorization: Optional[str]):
     user = _resolve_optional_user(db, auth_service, authorization)
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication required.")
@@ -74,7 +75,7 @@ async def analyze_stock(
     db: Session = Depends(get_db),
     agent=Depends(get_stock_agent),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _resolve_optional_user(db, auth_service, authorization)
     if user is None:
@@ -88,7 +89,7 @@ async def analyze_stock_stream(
     db: Session = Depends(get_db),
     agent=Depends(get_stock_agent),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _resolve_optional_user(db, auth_service, authorization)
 
@@ -124,7 +125,7 @@ async def get_watchlist(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
     settings=Depends(get_settings),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     tickers = settings.default_watchlist
     user = _resolve_optional_user(db, auth_service, authorization)
@@ -169,7 +170,7 @@ async def login_user(
 async def get_current_user_profile(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     return auth_service.to_profile(user)
@@ -179,7 +180,7 @@ async def get_current_user_profile(
 async def get_user_history(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     return UserHistoryResponse(items=auth_service.get_history(db, user.id))
@@ -189,7 +190,7 @@ async def get_user_history(
 async def get_saved_watchlist(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     return SavedWatchlistResponse(items=auth_service.list_watchlist(db, user.id))
@@ -200,7 +201,7 @@ async def add_saved_watchlist_item(
     payload: WatchlistUpdateRequest,
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     auth_service.add_watchlist_item(db, user.id, payload.ticker)
@@ -213,7 +214,7 @@ async def create_alert(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
     alert_service=Depends(get_alert_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     return alert_service.create_alert(db, user.id, payload.ticker, payload.alert_type, payload.threshold_value)
@@ -224,7 +225,7 @@ async def list_alerts(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
     alert_service=Depends(get_alert_service),
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ):
     user = _require_user(db, auth_service, authorization)
     return await alert_service.list_alerts(db, user.id)

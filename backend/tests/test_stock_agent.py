@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -121,7 +122,7 @@ def test_stream_analysis_completes_with_fast_draft_when_refinement_fails(monkeyp
             return "refined answer", "heuristic"
 
     class StubTickerResolver:
-        def resolve(self, query: str, explicit_ticker: str | None = None):
+        def resolve(self, query: str, explicit_ticker: Optional[str] = None):
             return "INFY.NS"
 
     class StubDb:

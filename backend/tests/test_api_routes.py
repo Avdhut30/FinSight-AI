@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 
 import pytest
 from fastapi.testclient import TestClient
@@ -77,7 +78,7 @@ def test_watchlist_route_returns_items_from_overridden_service(client: TestClien
 
     class StubStockService:
         def __init__(self) -> None:
-            self.requested_tickers: list[str] | None = None
+            self.requested_tickers: Optional[list[str]] = None
 
         async def get_watchlist(self, tickers: list[str]) -> list[StockSnapshot]:
             self.requested_tickers = tickers
@@ -104,7 +105,7 @@ def test_analyze_route_returns_agent_response(client: TestClient):
 
     class StubAgent:
         def __init__(self) -> None:
-            self.received_query: str | None = None
+            self.received_query: Optional[str] = None
             self.received_db = None
 
         async def analyze(self, payload, db):

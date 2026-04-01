@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -49,7 +50,7 @@ class AuthService:
         db.commit()
         return user, token
 
-    def authenticate(self, db: Session, token: str | None) -> UserRecord | None:
+    def authenticate(self, db: Session, token: Optional[str]) -> Optional[UserRecord]:
         if not token:
             return None
 

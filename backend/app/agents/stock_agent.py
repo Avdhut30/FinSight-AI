@@ -6,7 +6,7 @@ import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
@@ -65,7 +65,7 @@ class StockAnalysisAgent:
         llm_service: LLMService,
         ticker_resolver: TickerResolver,
         news_limit: int,
-        memory_service: MemoryService | None = None,
+        memory_service: Optional[MemoryService] = None,
     ) -> None:
         self.stock_service = stock_service
         self.news_service = news_service
@@ -78,7 +78,7 @@ class StockAnalysisAgent:
         self.news_agent = NewsAgent()
         self.fundamental_agent = FundamentalAgent()
 
-    async def analyze(self, request: AnalyzeRequest, db: Session, user_id: str | None = None) -> AnalyzeResponse:
+    async def analyze(self, request: AnalyzeRequest, db: Session, user_id: Optional[str] = None) -> AnalyzeResponse:
         query_text = self._truncate_for_log(request.query)
         self._log_analysis_request(query_text, request)
 
@@ -96,7 +96,7 @@ class StockAnalysisAgent:
         self,
         request: AnalyzeRequest,
         db: Session,
-        user_id: str | None = None,
+        user_id: Optional[str] = None,
     ) -> AsyncIterator[dict[str, object]]:
         query_text = self._truncate_for_log(request.query)
         self._log_analysis_request(query_text, request)
@@ -280,7 +280,7 @@ class StockAnalysisAgent:
             memory_context=draft.memory_context,
         )
 
-    def _persist_response(self, db: Session, response: AnalyzeResponse, user_id: str | None = None) -> None:
+    def _persist_response(self, db: Session, response: AnalyzeResponse, user_id: Optional[str] = None) -> None:
         try:
             if user_id is None:
                 save_analysis(db, response)
@@ -473,7 +473,7 @@ class StockAnalysisAgent:
         db: Session,
         query: str,
         ticker: str,
-        user_id: str | None = None,
+        user_id: Optional[str] = None,
     ) -> list[MemoryInsight]:
         if self.memory_service is None:
             return []

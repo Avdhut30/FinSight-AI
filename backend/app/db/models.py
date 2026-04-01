@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import uuid4
 
 from sqlalchemy import Boolean, DateTime, Float, JSON, String, Text, UniqueConstraint
@@ -47,7 +48,7 @@ class AlertRecord(Base):
     alert_type: Mapped[str] = mapped_column(String(32), nullable=False)
     threshold_value: Mapped[float] = mapped_column(Float, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    triggered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    triggered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AnalysisRecord(Base):
@@ -55,7 +56,7 @@ class AnalysisRecord(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    user_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     ticker: Mapped[str] = mapped_column(String(24), nullable=False, index=True)
     recommendation: Mapped[str] = mapped_column(String(32), nullable=False)

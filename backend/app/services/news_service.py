@@ -7,6 +7,7 @@ from email.utils import parsedate_to_datetime
 from threading import Lock
 from time import monotonic
 from urllib.parse import quote_plus
+from typing import Optional
 
 import feedparser
 
@@ -25,7 +26,7 @@ class NewsCacheEntry:
 class NewsService:
     cache_ttl_seconds = 300.0
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(self, settings: Optional[Settings] = None) -> None:
         self.settings = settings or get_settings()
         self._cache: dict[str, NewsCacheEntry] = {}
         self._cache_lock = Lock()
@@ -47,7 +48,7 @@ class NewsService:
         return [item.model_copy(deep=True) for item in google_news]
 
     async def _fetch_google_news_with_retries(self, ticker: str, company_name: str, limit: int) -> list[NewsItem]:
-        last_error: Exception | None = None
+        last_error: Optional[Exception] = None
         for attempt in range(1, self.settings.news_retry_attempts + 1):
             try:
                 return await asyncio.wait_for(
@@ -82,21 +83,21 @@ class NewsService:
         return [item for item in items if item.title]
 
     @staticmethod
-    def _strip_html(value: str | None) -> str | None:
+    def _strip_html(value: Optional[str]) -> Optional[str]:
         if not value:
             return None
         cleaned = re.sub(r"<[^>]+>", "", value)
         return re.sub(r"\s+", " ", cleaned).strip()
 
     @staticmethod
-    def _extract_google_source(entry) -> str | None:
+    def _extract_google_source(entry) -> Optional[str]:
         source = entry.get("source")
         if isinstance(source, dict):
             return source.get("title")
         return None
 
     @staticmethod
-    def _to_iso(value) -> str | None:
+    def _to_iso(value) -> Optional[str]:
         if value is None:
             return None
         if isinstance(value, (int, float)):
@@ -111,7 +112,7 @@ class NewsService:
                     return value
         return None
 
-    def _get_cached_news(self, cache_key: str) -> list[NewsItem] | None:
+    def _get_cached_news(self, cache_key: str) -> Optional[list[NewsItem]]:
         with self._cache_lock:
             entry = self._cache.get(cache_key)
             if entry is None:

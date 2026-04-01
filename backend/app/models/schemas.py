@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,39 +11,39 @@ class PricePoint(BaseModel):
 
 class NewsItem(BaseModel):
     title: str
-    summary: str | None = None
-    publisher: str | None = None
-    link: str | None = None
-    published_at: str | None = None
-    sentiment_label: str | None = None
-    sentiment_score: float | None = None
+    summary: Optional[str] = None
+    publisher: Optional[str] = None
+    link: Optional[str] = None
+    published_at: Optional[str] = None
+    sentiment_label: Optional[str] = None
+    sentiment_score: Optional[float] = None
 
 
 class StockSnapshot(BaseModel):
     ticker: str
     company_name: str
-    currency: str | None = None
-    exchange: str | None = None
-    sector: str | None = None
+    currency: Optional[str] = None
+    exchange: Optional[str] = None
+    sector: Optional[str] = None
     current_price: float
-    previous_close: float | None = None
-    day_change_percent: float | None = None
-    market_cap: float | None = None
-    pe_ratio: float | None = None
-    volume: int | None = None
-    average_volume: int | None = None
-    fifty_two_week_high: float | None = None
-    fifty_two_week_low: float | None = None
-    one_month_return_percent: float | None = None
-    six_month_return_percent: float | None = None
-    rsi_14: float | None = None
-    support_level: float | None = None
-    resistance_level: float | None = None
-    risk_score: int | None = None
+    previous_close: Optional[float] = None
+    day_change_percent: Optional[float] = None
+    market_cap: Optional[float] = None
+    pe_ratio: Optional[float] = None
+    volume: Optional[int] = None
+    average_volume: Optional[int] = None
+    fifty_two_week_high: Optional[float] = None
+    fifty_two_week_low: Optional[float] = None
+    one_month_return_percent: Optional[float] = None
+    six_month_return_percent: Optional[float] = None
+    rsi_14: Optional[float] = None
+    support_level: Optional[float] = None
+    resistance_level: Optional[float] = None
+    risk_score: Optional[int] = None
     trend_signal: str
     valuation_signal: str
     summary: str
-    ai_summary: str | None = None
+    ai_summary: Optional[str] = None
     price_history: list[PricePoint] = Field(default_factory=list)
 
 
@@ -59,7 +59,7 @@ class SentimentSummary(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     query: str = Field(min_length=3, max_length=500)
-    ticker: str | None = Field(default=None, max_length=24)
+    ticker: Optional[str] = Field(default=None, max_length=24)
     use_llm: bool = True
 
 
@@ -80,15 +80,15 @@ class SpecialistSignal(BaseModel):
 
 class ChartInsight(BaseModel):
     momentum: str
-    support_level: float | None = None
-    resistance_level: float | None = None
-    rsi_14: float | None = None
+    support_level: Optional[float] = None
+    resistance_level: Optional[float] = None
+    rsi_14: Optional[float] = None
     summary: str
 
 
 class HistoricalContext(BaseModel):
     period: str
-    return_percent: float | None = None
+    return_percent: Optional[float] = None
     sentiment_shift: str
     key_events: list[str] = Field(default_factory=list)
     summary: str
@@ -118,10 +118,10 @@ class AnalyzeResponse(BaseModel):
     thesis_points: list[str]
     risk_factors: list[str]
     data_sources: list[str]
-    decision: DecisionPayload | None = None
+    decision: Optional[DecisionPayload] = None
     specialists: list[SpecialistSignal] = Field(default_factory=list)
-    chart_insight: ChartInsight | None = None
-    historical_context: HistoricalContext | None = None
+    chart_insight: Optional[ChartInsight] = None
+    historical_context: Optional[HistoricalContext] = None
     memory_context: list[MemoryInsight] = Field(default_factory=list)
 
 
@@ -132,7 +132,7 @@ class WatchlistResponse(BaseModel):
 
 class PortfolioHoldingInput(BaseModel):
     ticker: str = Field(min_length=1, max_length=24)
-    weight: float | None = Field(default=None, ge=0.0, le=100.0)
+    weight: Optional[float] = Field(default=None, ge=0.0, le=100.0)
 
 
 class PortfolioAnalyzeRequest(BaseModel):
@@ -173,7 +173,7 @@ class AlertResponse(BaseModel):
     threshold_value: float
     active: bool
     triggered: bool
-    current_price: float | None = None
+    current_price: Optional[float] = None
     message: str
     created_at: datetime
 

@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 
 class TickerResolver:
@@ -33,7 +34,7 @@ class TickerResolver:
     }
     _stopwords = {"AI", "TOP", "WHY", "BUY", "SELL", "NOW", "INDIA"}
 
-    def resolve(self, query: str, explicit_ticker: str | None = None) -> str | None:
+    def resolve(self, query: str, explicit_ticker: Optional[str] = None) -> Optional[str]:
         if explicit_ticker:
             return self.normalize(explicit_ticker)
 

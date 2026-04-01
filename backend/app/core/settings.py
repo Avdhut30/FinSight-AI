@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -25,12 +25,12 @@ class Settings(BaseSettings):
         ]
     )
 
-    openai_api_key: str | None = None
+    openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o-mini"
     openai_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     openai_max_tokens: int = Field(default=300, ge=64, le=4000)
     openai_timeout_seconds: float = Field(default=4.0, gt=0.0, le=30.0)
-    twelve_data_api_key: str | None = None
+    twelve_data_api_key: Optional[str] = None
     enable_transformers_sentiment: bool = False
     finbert_model_name: str = "ProsusAI/finbert"
 

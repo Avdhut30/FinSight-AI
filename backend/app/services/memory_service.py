@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,7 +18,7 @@ class MemoryService:
         db: Session,
         query: str,
         ticker: str,
-        user_id: str | None = None,
+        user_id: Optional[str] = None,
         limit: int = 3,
     ) -> list[MemoryInsight]:
         statement = select(AnalysisRecord).where(AnalysisRecord.ticker == ticker).order_by(AnalysisRecord.created_at.desc()).limit(20)

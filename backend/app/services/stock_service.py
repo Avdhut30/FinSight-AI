@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 from threading import Lock
 from time import monotonic
+from typing import Optional
 
 import httpx
 import pandas as pd
@@ -17,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class HistoryMetrics:
-    day_change_percent: float | None
-    one_month_return_percent: float | None
-    six_month_return_percent: float | None
-    rsi_14: float | None
-    support_level: float | None
-    resistance_level: float | None
+    day_change_percent: Optional[float]
+    one_month_return_percent: Optional[float]
+    six_month_return_percent: Optional[float]
+    rsi_14: Optional[float]
+    support_level: Optional[float]
+    resistance_level: Optional[float]
     trend_signal: str
     price_history: list[PricePoint]
 
@@ -88,7 +89,7 @@ class StockService:
         "WIPRO": "Technology",
     }
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(self, settings: Optional[Settings] = None) -> None:
         self.settings = settings or get_settings()
         self._snapshot_cache: dict[str, SnapshotCacheEntry] = {}
         self._failure_cache: dict[str, FailureCacheEntry] = {}
@@ -309,7 +310,7 @@ class StockService:
             raise failures[0]
         return snapshots
 
-    async def _build_snapshot_from_batch_payload(self, ticker: str, payload: dict | None) -> StockSnapshot:
+    async def _build_snapshot_from_batch_payload(self, ticker: str, payload: Optional[dict]) -> StockSnapshot:
         if not isinstance(payload, dict):
             return await self._build_fallback_snapshot(ticker, f"No Twelve Data history returned for {ticker}.")
 
@@ -351,7 +352,7 @@ class StockService:
         lows = quote.get("low", []) if isinstance(quote, dict) else []
         volumes = quote.get("volume", []) if isinstance(quote, dict) else []
 
-        records: list[tuple[pd.Timestamp, float, float | None, float | None, int | None]] = []
+        records: list[tuple[pd.Timestamp, float, Optional[float], Optional[float], Optional[int]]] = []
         for raw_timestamp, raw_close, raw_high, raw_low, raw_volume in zip(timestamps, closes, highs, lows, volumes):
             close = self._parse_float(raw_close)
             if close is None:
@@ -457,7 +458,7 @@ class StockService:
             return stale_snapshot
         raise ValueError(message)
 
-    def _build_snapshot_from_twelve_data(self, ticker: str, payload: dict, company_name: str | None) -> StockSnapshot:
+    def _build_snapshot_from_twelve_data(self, ticker: str, payload: dict, company_name: Optional[str]) -> StockSnapshot:
         meta = payload.get("meta", {}) if isinstance(payload, dict) else {}
         values = payload.get("values", []) if isinstance(payload, dict) else []
         if not isinstance(values, list) or not values:
@@ -570,7 +571,7 @@ class StockService:
 
         return symbol or ticker
 
-    def _get_cached_snapshot(self, ticker: str, allow_stale: bool = False) -> StockSnapshot | None:
+    def _get_cached_snapshot(self, ticker: str, allow_stale: bool = False) -> Optional[StockSnapshot]:
         with self._cache_lock:
             entry = self._snapshot_cache.get(ticker)
             if entry is None:
@@ -583,7 +584,7 @@ class StockService:
                 return None
             return entry.snapshot
 
-    def _get_cached_failure(self, ticker: str) -> str | None:
+    def _get_cached_failure(self, ticker: str) -> Optional[str]:
         with self._cache_lock:
             entry = self._failure_cache.get(ticker)
             if entry is None:
@@ -608,7 +609,7 @@ class StockService:
             self._failure_cache.pop(ticker, None)
 
     @staticmethod
-    def _to_twelve_data_symbol(ticker: str) -> tuple[str, str | None, str]:
+    def _to_twelve_data_symbol(ticker: str) -> tuple[str, Optional[str], str]:
         normalized = ticker.strip().upper()
         if normalized.endswith(".NS"):
             symbol = normalized[:-3]
@@ -622,7 +623,7 @@ class StockService:
         return normalized, None, normalized
 
     @staticmethod
-    def _clean_company_name(value: object) -> str | None:
+    def _clean_company_name(value: object) -> Optional[str]:
         if value is None:
             return None
         text = str(value).strip()
@@ -634,9 +635,9 @@ class StockService:
         *,
         params: dict[str, object],
         attempts: int,
-        headers: dict[str, str] | None = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> dict:
-        last_error: httpx.HTTPError | None = None
+        last_error: Optional[httpx.HTTPError] = None
 
         for attempt in range(1, attempts + 1):
             try:
@@ -675,7 +676,7 @@ class StockService:
         return "not a valid twelve data symbol" in lowered or "no yahoo finance history returned" in lowered
 
     @staticmethod
-    def _parse_float(value: object) -> float | None:
+    def _parse_float(value: object) -> Optional[float]:
         if value is None:
             return None
         try:
@@ -687,7 +688,7 @@ class StockService:
         return None
 
     @staticmethod
-    def _parse_int(value: object) -> int | None:
+    def _parse_int(value: object) -> Optional[int]:
         if value is None:
             return None
         try:
@@ -696,7 +697,7 @@ class StockService:
             return None
 
     @staticmethod
-    def _round_optional(value: float | None) -> float | None:
+    def _round_optional(value: Optional[float]) -> Optional[float]:
         return round(value, 2) if value is not None else None
 
     def _build_history_metrics(self, closes: pd.Series) -> HistoryMetrics:
@@ -737,7 +738,7 @@ class StockService:
         )
 
     @staticmethod
-    def _pct_return(closes: pd.Series, periods: int) -> float | None:
+    def _pct_return(closes: pd.Series, periods: int) -> Optional[float]:
         if periods <= 0 or len(closes) <= periods:
             return None
         start_value = float(closes.iloc[-periods - 1])
@@ -747,7 +748,7 @@ class StockService:
         return ((end_value - start_value) / start_value) * 100
 
     @staticmethod
-    def _valuation_signal(pe_ratio: float | None) -> str:
+    def _valuation_signal(pe_ratio: Optional[float]) -> str:
         if pe_ratio is None:
             return "unknown"
         if pe_ratio < 15:
@@ -757,7 +758,7 @@ class StockService:
         return "expensive"
 
     @staticmethod
-    def _compute_rsi(closes: pd.Series, periods: int) -> float | None:
+    def _compute_rsi(closes: pd.Series, periods: int) -> Optional[float]:
         if len(closes) <= periods:
             return None
         delta = closes.diff().dropna()
@@ -773,9 +774,9 @@ class StockService:
     @staticmethod
     def _risk_score(
         trend_signal: str,
-        one_month_return_percent: float | None,
-        day_change_percent: float | None,
-        rsi_14: float | None,
+        one_month_return_percent: Optional[float],
+        day_change_percent: Optional[float],
+        rsi_14: Optional[float],
         valuation_signal: str,
     ) -> int:
         score = 50
@@ -806,9 +807,9 @@ class StockService:
     @staticmethod
     def _build_summary(
         company_name: str,
-        current_price: float | None,
-        day_change_percent: float | None,
-        pe_ratio: float | None,
+        current_price: Optional[float],
+        day_change_percent: Optional[float],
+        pe_ratio: Optional[float],
         trend_signal: str,
     ) -> str:
         price_text = f"{current_price:.2f}" if current_price is not None else "N/A"
@@ -823,10 +824,10 @@ class StockService:
     def _build_ai_summary(
         company_name: str,
         trend_signal: str,
-        rsi_14: float | None,
-        support_level: float | None,
-        resistance_level: float | None,
-        risk_score: int | None,
+        rsi_14: Optional[float],
+        support_level: Optional[float],
+        resistance_level: Optional[float],
+        risk_score: Optional[int],
     ) -> str:
         momentum_text = f"RSI {rsi_14:.1f}" if rsi_14 is not None else "RSI unavailable"
         support_text = f"support near {support_level:.2f}" if support_level is not None else "support unknown"

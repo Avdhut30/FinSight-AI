@@ -1,10 +1,12 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.db.models import AnalysisRecord
 from app.models.schemas import AnalyzeResponse
 
 
-def save_analysis(db: Session, response: AnalyzeResponse, user_id: str | None = None) -> AnalysisRecord:
+def save_analysis(db: Session, response: AnalyzeResponse, user_id: Optional[str] = None) -> AnalysisRecord:
     record = AnalysisRecord(
         id=response.analysis_id,
         user_id=user_id,
@@ -21,5 +23,5 @@ def save_analysis(db: Session, response: AnalyzeResponse, user_id: str | None = 
     return record
 
 
-def get_analysis(db: Session, analysis_id: str) -> AnalysisRecord | None:
+def get_analysis(db: Session, analysis_id: str) -> Optional[AnalysisRecord]:
     return db.get(AnalysisRecord, analysis_id)
