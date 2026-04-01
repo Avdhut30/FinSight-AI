@@ -151,9 +151,12 @@ async def register_user(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
 ):
-    user = auth_service.register(db, payload.email, payload.password, payload.name)
-    user, token = auth_service.login(db, payload.email, payload.password)
-    return AuthResponse(token=token, user=auth_service.to_profile(user))
+    try:
+        user = auth_service.register(db, payload.email, payload.password, payload.name)
+        user, token = auth_service.login(db, payload.email, payload.password)
+        return AuthResponse(token=token, user=auth_service.to_profile(user))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.post("/auth/login", response_model=AuthResponse)
@@ -162,8 +165,11 @@ async def login_user(
     db: Session = Depends(get_db),
     auth_service=Depends(get_auth_service),
 ):
-    user, token = auth_service.login(db, payload.email, payload.password)
-    return AuthResponse(token=token, user=auth_service.to_profile(user))
+    try:
+        user, token = auth_service.login(db, payload.email, payload.password)
+        return AuthResponse(token=token, user=auth_service.to_profile(user))
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
 
 
 @router.get("/auth/me", response_model=UserProfileResponse)
