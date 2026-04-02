@@ -13,6 +13,7 @@ from app.core.logging import configure_logging
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
 from app.core.settings import get_settings
+from app.db import models  # noqa: F401 - force model import so metadata is populated
 from app.db.base import Base  # ensures models are registered
 from app.db.session import engine
 
