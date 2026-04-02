@@ -13,6 +13,8 @@ from app.core.logging import configure_logging
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
 from app.core.settings import get_settings
+from app.db import models  # noqa: F401 - ensure models are imported for metadata
+from app.db.session import Base, engine
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -49,6 +51,12 @@ app.add_middleware(
 )
 app.add_middleware(RequestContextMiddleware)
 app.include_router(router, prefix=settings.api_prefix)
+
+
+@app.on_event("startup")
+def create_tables() -> None:
+    """Ensure all database tables exist before handling requests."""
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
