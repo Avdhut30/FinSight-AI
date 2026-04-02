@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # Ensure database tables exist before serving requests.
+    Base.metadata.create_all(bind=engine)
+
     try:
         get_stock_agent()
     except Exception:
@@ -51,12 +54,6 @@ app.add_middleware(
 )
 app.add_middleware(RequestContextMiddleware)
 app.include_router(router, prefix=settings.api_prefix)
-
-
-@app.on_event("startup")
-def create_tables() -> None:
-    """Ensure all database tables exist before handling requests."""
-    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
