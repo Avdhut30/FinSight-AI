@@ -1,4 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Sparkline } from "./components/Sparkline";
 import {
   analyzePortfolio,
@@ -13,14 +15,26 @@ import {
   registerUser,
   saveTickerToWatchlist
 } from "./lib/api";
-import type { AlertResponse, AnalyzeResponse, PortfolioAnalysisResponse, StockSnapshot, UserProfile, WatchlistItem } from "./types";
+import type {
+  AlertResponse,
+  AnalyzeResponse,
+  PortfolioAnalysisResponse,
+  StockSnapshot,
+  UserHistoryItem,
+  UserProfile,
+  WatchlistItem
+} from "./types";
 
 type ChatMessage = { id: string; role: "assistant" | "user"; content: string; analysis?: AnalyzeResponse };
 type NotebookEntry = { id: string; created_at: string; analysis: AnalyzeResponse };
 type AuthFieldErrors = { name?: string; email?: string; password?: string };
+type Toast = { id: string; type: "success" | "error" | "info"; message: string };
+type Tag = { id: string; label: string };
 
-const TOKEN_STORAGE_KEY = "finsight-auth-token";
+const TOKEN_STORAGE_KEY = "token";
+const LEGACY_TOKEN_KEY = "finsight-auth-token";
 const NOTEBOOK_STORAGE_KEY = "finsight-notebook";
+const THEME_STORAGE_KEY = "finsight-theme";
 const MIN_PASSWORD_LENGTH = 8;
 const MIN_EMAIL_LENGTH = 5;
 const quickPrompts = [
@@ -28,6 +42,12 @@ const quickPrompts = [
   "Why did TCS move today?",
   "What does recent news suggest for HDFC Bank?",
   "What was the trend of SBIN over the last 6 months?"
+];
+const quickActions = [
+  { id: "explain-move", label: "Explain today's move", template: (ticker: string) => `Explain today's move in ${ticker}. Focus on price drivers, news, and sentiment.` },
+  { id: "bull-case", label: "Bull case", template: (ticker: string) => `Build the bullish case for ${ticker} with 3 catalysts and price targets.` },
+  { id: "bear-case", label: "Bear case", template: (ticker: string) => `Build the bear case for ${ticker}. Highlight 3 key risks and downside scenarios.` },
+  { id: "risk-check", label: "Risk check", template: (ticker: string) => `Give a risk checklist for ${ticker}: valuation, liquidity, governance, macro sensitivity.` }
 ];
 const personaOptions = [
   { id: "intraday", label: "Intraday", prompt: "Prioritize same-day momentum, volume spikes, VWAP, and tight risk." },
@@ -44,10 +64,13 @@ const focusOptions = [
   { id: "fundamental", label: "Fundamental", prompt: "Earnings quality, margins, balance sheet, valuation." },
   { id: "sentiment", label: "Sentiment", prompt: "News tone, flows, and positioning shifts." }
 ];
+const chartPalette = ["#0ea5e9", "#16a34a", "#f97316", "#8b5cf6", "#ef4444", "#22d3ee"];
 const inrFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 
 function getStoredToken() {
-  return typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_STORAGE_KEY);
+  return typeof window === "undefined"
+    ? null
+    : window.localStorage.getItem(TOKEN_STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_TOKEN_KEY);
 }
 function formatSignedPercent(value?: number | null) {
   return value === undefined || value === null ? "N/A" : `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
@@ -60,6 +83,8 @@ function titleCase(value: string) {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamStatus, setStreamStatus] = useState("Ready");
@@ -97,18 +122,33 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState("");
   const [savedWatchlist, setSavedWatchlist] = useState<WatchlistItem[]>([]);
   const [historyLabels, setHistoryLabels] = useState<string[]>([]);
+  const [historyItems, setHistoryItems] = useState<UserHistoryItem[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<string>(() => (typeof window === "undefined" ? "light" : window.localStorage.getItem(THEME_STORAGE_KEY) ?? "light"));
 
   const [portfolioInput, setPortfolioInput] = useState("TCS, RELIANCE, INFY");
   const [portfolioResult, setPortfolioResult] = useState<PortfolioAnalysisResponse | null>(null);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [tagInput, setTagInput] = useState("");
 
   const [alerts, setAlerts] = useState<AlertResponse[]>([]);
   const [alertsLoading, setAlertsLoading] = useState(false);
   const [alertType, setAlertType] = useState<"price_above" | "price_below" | "percent_drop">("price_below");
   const [alertThreshold, setAlertThreshold] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   function pushStatus(message: string) {
     setStatusLog((current) => (current[current.length - 1] === message ? current : [...current, message].slice(-8)));
+  }
+
+  function pushToast(message: string, type: Toast["type"] = "info") {
+    const id = `toast-${Date.now()}`;
+    setToasts((current) => [...current, { id, type, message }]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+    }, 4200);
   }
 
   function trackStock(stock: StockSnapshot) {
@@ -123,6 +163,7 @@ export default function App() {
     setAuthToken(null);
     setUser(null);
     setAuthError(message);
+    pushToast(message, "error");
   }
 
   function buildQueryWithOptions(raw: string) {
@@ -146,6 +187,48 @@ export default function App() {
     }
   }
 
+  function handleLogout() {
+    setAuthToken(null);
+    setAuthError(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_TOKEN_KEY);
+    }
+    pushToast("Logged out", "info");
+    navigate("/login", { replace: true });
+  }
+
+  function addTag() {
+    const trimmed = tagInput.trim();
+    if (!trimmed) return;
+    const id = trimmed.toLowerCase().replace(/\s+/g, "-");
+    if (tags.some((t) => t.id === id)) {
+      setTagInput("");
+      return;
+    }
+    const next = [...tags, { id, label: trimmed }];
+    setTags(next);
+    setTagInput("");
+  }
+
+  function removeTag(id: string) {
+    setTags((current) => current.filter((tag) => tag.id !== id));
+  }
+
+  function copyShareLink() {
+    if (!analysis || typeof navigator === "undefined") return;
+    const payload = `${window.location.origin}/analysis/${analysis.analysis_id}`;
+    navigator.clipboard.writeText(payload).then(() => pushToast("Share link copied", "success"));
+  }
+
+  function exportPDF() {
+    if (!analysis) {
+      pushToast("Run an analysis to export.", "info");
+      return;
+    }
+    window.print();
+  }
+
   async function pingHealth() {
     setHealth("checking");
     try {
@@ -163,6 +246,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
+    const next = theme === "light" ? "theme-light" : "theme-dark";
+    document.body.classList.remove("theme-light", "theme-dark");
+    document.body.classList.add(next);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  useEffect(() => {
     persistNotebook(notebook);
   }, [notebook]);
 
@@ -175,6 +266,7 @@ export default function App() {
       fetchAlerts(token)
     ]);
     setUser(profile);
+    setHistoryItems(history.items);
     setHistoryLabels(history.items.map((item) => `${item.ticker} ${item.recommendation.toUpperCase()} ${Math.round(item.confidence * 100)}%`));
     setSavedWatchlist(watchlist.items);
     setAlerts(nextAlerts);
@@ -189,11 +281,13 @@ export default function App() {
       setAuthChecking(false);
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+        window.localStorage.removeItem(LEGACY_TOKEN_KEY);
       }
       return;
     }
     if (typeof window !== "undefined") {
       window.localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
+      window.localStorage.setItem(LEGACY_TOKEN_KEY, authToken);
     }
     setAuthChecking(true);
     void loadWorkspace(authToken)
@@ -224,6 +318,17 @@ export default function App() {
     return () => window.clearInterval(intervalId);
   }, [authToken]);
 
+  useEffect(() => {
+    const onLanding = location.pathname === "/";
+    if (authToken && user && (location.pathname === "/login" || onLanding)) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    if (!authToken && location.pathname === "/dashboard") {
+      navigate("/login", { replace: true });
+    }
+  }, [authToken, user, location.pathname, navigate]);
+
   async function submitQuery(nextQuery: string) {
     const trimmed = nextQuery.trim();
     if (!trimmed) return;
@@ -237,6 +342,7 @@ export default function App() {
     const assistantMessageId = `assistant-${Date.now()}`;
     let receivedAnswerDelta = false;
     setIsLoading(true);
+    setStreamingMessageId(assistantMessageId);
     setError(null);
     setStatusLog([]);
     pushStatus("Resolving company and ticker...");
@@ -271,20 +377,24 @@ export default function App() {
                 message.id === assistantMessageId ? { id: nextAnalysis.analysis_id, role: "assistant", content: nextAnalysis.answer, analysis: nextAnalysis } : message
               )
             );
+            setStreamingMessageId(null);
           }
         },
         authToken
       );
       if (authToken) await loadWorkspace(authToken);
+      pushToast("Analysis ready", "success");
       setQuery("");
     } catch (requestError) {
       if (isAuthError(requestError)) {
         handleAuthFailure();
       } else {
         setError(requestError instanceof Error ? requestError.message : "Analysis failed.");
+        pushToast(requestError instanceof Error ? requestError.message : "Analysis failed.", "error");
       }
     } finally {
       setIsLoading(false);
+      setStreamingMessageId(null);
       setStreamStatus("Ready");
       const endedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
       setLastLatencyMs(Math.max(0, Math.round(endedAt - startedAt)));
@@ -321,13 +431,24 @@ export default function App() {
       const response = authMode === "register" ? await registerUser(trimmedName, trimmedEmail, trimmedPassword) : await loginUser(trimmedEmail, trimmedPassword);
       setUser(response.user);
       setAuthToken(response.token);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
+        window.localStorage.setItem(LEGACY_TOKEN_KEY, response.token);
+      }
       setAuthPassword("");
       setError(null);
+      pushToast(authMode === "register" ? "Account created. Redirecting to dashboard." : "Welcome back!", "success");
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard";
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (requestError) {
       if (isAuthError(requestError)) {
         handleAuthFailure();
       } else {
         setAuthError(requestError instanceof Error ? requestError.message : "Authentication failed.");
+        pushToast(requestError instanceof Error ? requestError.message : "Authentication failed.", "error");
       }
     } finally {
       setAuthBusy(false);
@@ -340,11 +461,13 @@ export default function App() {
     setPortfolioLoading(true);
     try {
       setPortfolioResult(await analyzePortfolio(tickers));
+      pushToast("Portfolio analyzed", "success");
     } catch (requestError) {
       if (isAuthError(requestError)) {
         handleAuthFailure();
       } else {
         setError(requestError instanceof Error ? requestError.message : "Portfolio analysis failed.");
+        pushToast(requestError instanceof Error ? requestError.message : "Portfolio analysis failed.", "error");
       }
     } finally {
       setPortfolioLoading(false);
@@ -356,11 +479,13 @@ export default function App() {
     try {
       const response = await saveTickerToWatchlist(authToken, analysis.stock.ticker);
       setSavedWatchlist(response.items);
+      pushToast("Saved to your watchlist", "success");
     } catch (requestError) {
       if (isAuthError(requestError)) {
         handleAuthFailure();
       } else {
         setError(requestError instanceof Error ? requestError.message : "Could not save the ticker.");
+        pushToast(requestError instanceof Error ? requestError.message : "Could not save the ticker.", "error");
       }
     }
   }
@@ -372,11 +497,13 @@ export default function App() {
       await createAlert(authToken, analysis.stock.ticker, alertType, Number(alertThreshold));
       setAlerts(await fetchAlerts(authToken));
       setAlertThreshold("");
+      pushToast("Alert created", "success");
     } catch (requestError) {
       if (isAuthError(requestError)) {
         handleAuthFailure();
       } else {
         setError(requestError instanceof Error ? requestError.message : "Could not create the alert.");
+        pushToast(requestError instanceof Error ? requestError.message : "Could not create the alert.", "error");
       }
     } finally {
       setAlertsLoading(false);
@@ -393,6 +520,7 @@ export default function App() {
     setNotebook((current) => {
       const next = [entry, ...current.filter((item) => item.id !== entry.id)].slice(0, 8);
       persistNotebook(next);
+      pushToast("Saved to notebook", "success");
       return next;
     });
   }
@@ -415,15 +543,28 @@ export default function App() {
     ]);
   }
 
+  function runQuickAction(actionId: string) {
+    if (!analysis) {
+      pushToast("Run an analysis first.", "info");
+      return;
+    }
+    const action = quickActions.find((item) => item.id === actionId);
+    if (!action) return;
+    const ticker = analysis.stock.ticker.replace(".NS", "").replace(".BO", "");
+    const q = action.template(ticker);
+    setQuery(q);
+    void submitQuery(q);
+  }
+
   async function copyLastAnswer() {
     if (!analysis || typeof navigator === "undefined") return;
-    const payload = `${analysis.stock.ticker} — ${analysis.stock.company_name}\nDecision: ${analysis.decision?.decision ?? analysis.recommendation} (${analysis.decision?.confidence ?? Math.round(analysis.confidence * 100)}%)\n\n${analysis.answer}`;
+    const payload = `${analysis.stock.ticker} â€” ${analysis.stock.company_name}\nDecision: ${analysis.decision?.decision ?? analysis.recommendation} (${analysis.decision?.confidence ?? Math.round(analysis.confidence * 100)}%)\n\n${analysis.answer}`;
     await navigator.clipboard.writeText(payload);
   }
 
   async function downloadLastAnswer() {
     if (!analysis || typeof document === "undefined") return;
-    const payload = `${analysis.stock.ticker} — ${analysis.stock.company_name}\nDecision: ${analysis.decision?.decision ?? analysis.recommendation} (${analysis.decision?.confidence ?? Math.round(analysis.confidence * 100)}%)\n\n${analysis.answer}`;
+    const payload = `${analysis.stock.ticker} â€” ${analysis.stock.company_name}\nDecision: ${analysis.decision?.decision ?? analysis.recommendation} (${analysis.decision?.confidence ?? Math.round(analysis.confidence * 100)}%)\n\n${analysis.answer}`;
     const blob = new Blob([payload], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -438,142 +579,430 @@ export default function App() {
   const activeTicker = analysis ? analysis.stock.ticker.replace(".NS", "").replace(".BO", "") : "Awaiting query";
   const triggeredAlerts = alerts.filter((item) => item.triggered).length;
   const isAuthenticated = Boolean(user && authToken);
+  const streamingActive = Boolean(streamingMessageId);
+  const showOverlay = isLoading || portfolioLoading || authBusy || authChecking;
+  const isLandingPage = location.pathname === "/";
+  const isLoginPage = location.pathname === "/login";
 
-  if (!isAuthenticated) {
-    return (
-      <div className="auth-shell">
-        <div className="auth-hero-card">
-          <div className="auth-hero-top">
-            <p className="hero-kicker">FinSight AI</p>
-            <span className="badge glow">Private Beta</span>
-          </div>
-          <h1 className="hero-title">Secure Research Workspace</h1>
-          <p className="hero-copy">
-            Log in to unlock streaming analysis, portfolio diagnostics, alerts, and a personal notebook. New users should create an
-            account first—then you’ll be redirected into the full console.
-          </p>
-          <div className="auth-bullets">
-            <span className="pill">Streaming agent trace</span>
-            <span className="pill">Portfolio QA</span>
-            <span className="pill">Smart alerts</span>
-            <span className="pill">Notebook saves</span>
-          </div>
-          <div className="auth-stats">
-            <article>
-              <small>Avg response</small>
-              <strong>~1.2s</strong>
-            </article>
-            <article>
-              <small>Coverage</small>
-              <strong>India + US</strong>
-            </article>
-            <article>
-              <small>Security</small>
-              <strong>Session JWT</strong>
-            </article>
-          </div>
+  const trendChartData = useMemo(() => {
+    if (!analysis?.stock.price_history?.length) return [];
+    return analysis.stock.price_history.map((point) => ({
+      ...point,
+      label: new Date(point.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })
+    }));
+  }, [analysis?.stock.price_history]);
+
+  const portfolioChartData = useMemo(() => {
+    if (!portfolioResult?.holdings?.length) return [];
+    return portfolioResult.holdings.map((item) => ({
+      name: item.ticker,
+      value: Math.round((item.weight ?? 0) * 100)
+    }));
+  }, [portfolioResult]);
+
+  function toggleTheme() {
+    setTheme((current) => (current === "light" ? "dark" : "light"));
+  }
+
+  const overlay = showOverlay ? (
+    <div className={`loading-overlay ${streamingActive ? "overlay-streaming" : ""}`}>
+      <div className="spinner" aria-hidden />
+      <div>
+        <p className="overlay-title">{streamingActive ? "Streaming AI response..." : "Working..."}</p>
+        <p className="overlay-sub">{streamStatus}</p>
+        {statusLog.length ? (
+          <ul className="overlay-steps">
+            {statusLog.slice(-4).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </div>
+  ) : null;
+
+  const toastStack = (
+    <div className="toast-stack">
+      {toasts.map((toast) => (
+        <div key={toast.id} className={`toast toast-${toast.type}`}>
+          <span>{toast.message}</span>
+          <button type="button" className="icon-button" onClick={() => setToasts((current) => current.filter((item) => item.id !== toast.id))}>
+            x
+          </button>
         </div>
-        <form className="auth-card auth-gate" onSubmit={handleAuthSubmit}>
-          <div className="toggle-row">
-            <button
-              type="button"
-              className={`toggle-chip ${authMode === "login" ? "active" : ""}`}
-              onClick={() => {
-                setAuthMode("login");
-                setAuthError(null);
-                setAuthFieldErrors({});
-              }}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={`toggle-chip ${authMode === "register" ? "active" : ""}`}
-              onClick={() => {
-                setAuthMode("register");
-                setAuthError(null);
-                setAuthFieldErrors({});
-              }}
-            >
-              Signup
-            </button>
+      ))}
+    </div>
+  );
+
+  if (!isAuthenticated && isLandingPage) {
+    return (
+      <>
+        {overlay}
+        {toastStack}
+        <div className="landing-page">
+          <header className="landing-hero">
+            <div className="landing-hero-copy">
+              <p className="hero-kicker">FinSight AI</p>
+              <h1>Trading-grade AI for modern investors</h1>
+              <p className="hero-copy">
+                Live streaming analysis, price-aware decisions, and portfolio intelligence built for a startup-grade SaaS launch.
+              </p>
+              <div className="landing-cta-row">
+                <button type="button" className="cta-primary" onClick={() => navigate("/login")}>
+                  Start free
+                </button>
+                <button type="button" className="cta-ghost" onClick={() => navigate("/dashboard")}>
+                  View dashboard
+                </button>
+              </div>
+              <div className="landing-pills">
+                <span className="pill">Streaming /analyze/stream</span>
+                <span className="pill">Charts + alerts</span>
+                <span className="pill">Save history</span>
+              </div>
+            </div>
+            <div className="landing-hero-card">
+              <div className="landing-card-head">
+                <span className="status-dot status-ok" />
+                Live AI trace
+                <span className="chip">Realtime</span>
+              </div>
+              <div className="landing-card-body">
+                <p className="muted">Analyzing TCS...</p>
+                <div className="typing-line">
+                  Resolving company and ticker <span className="cursor">|</span>
+                </div>
+                <div className="mini-metrics">
+                  <div>
+                    <small>Decision</small>
+                    <strong>BUY</strong>
+                  </div>
+                  <div>
+                    <small>Confidence</small>
+                    <strong>87%</strong>
+                  </div>
+                  <div>
+                    <small>Latency</small>
+                    <strong>{lastLatencyMs ? `${lastLatencyMs} ms` : "~1s"}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <section className="landing-section">
+            <div className="section-head">
+              <h2>Powerful Features</h2>
+              <p>Production-ready SaaS surface with streaming AI, charts, and saved history.</p>
+            </div>
+            <div className="feature-grid">
+              <div className="feature-card">
+                <h3>Real-time Analysis</h3>
+                <p>Get instant AI-powered stock insights.</p>
+              </div>
+              <div className="feature-card">
+                <h3>Portfolio Insights</h3>
+                <p>Track and optimize your investments.</p>
+              </div>
+              <div className="feature-card">
+                <h3>Smart Alerts</h3>
+                <p>Stay ahead with intelligent notifications.</p>
+              </div>
+              <div className="feature-card">
+                <h3>History & Notebook</h3>
+                <p>Save analyses, replay snapshots, and export.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-section how-section">
+            <div className="section-head">
+              <h2>How it works</h2>
+              <p>Three steps to a live trading assistant.</p>
+            </div>
+            <div className="how-grid">
+              <article className="how-card">
+                <span className="step">1</span>
+                <h3>Sign up</h3>
+                <p>Create your workspace and store the token locally.</p>
+              </article>
+              <article className="how-card">
+                <span className="step">2</span>
+                <h3>Analyze stocks</h3>
+                <p>Use the streaming /analyze/stream endpoint to watch the agent type in real time.</p>
+              </article>
+              <article className="how-card">
+                <span className="step">3</span>
+                <h3>Get insights</h3>
+                <p>View charts, reasoning, alerts, and save outcomes to history.</p>
+              </article>
+            </div>
+          </section>
+
+          <section className="landing-section pricing-section">
+            <h2>Pricing</h2>
+            <div className="pricing-grid">
+              <div className="pricing-card">
+                <h3>Free</h3>
+                <p className="muted">Basic access</p>
+                <button className="cta-primary" onClick={() => navigate("/login")}>
+                  Get Started
+                </button>
+              </div>
+              <div className="pricing-card pricing-card-accent">
+                <h3>Pro</h3>
+                <p>Advanced AI insights</p>
+                <button className="cta-ghost" onClick={() => navigate("/login")}>
+                  Upgrade
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-section preview-section">
+            <div className="section-head">
+              <h2>Dashboard preview</h2>
+              <p>Sidebar layout, top bar status, charts, alerts, and saved history are ready out of the box.</p>
+            </div>
+            <div className="preview-grid">
+              <div className="preview-card">
+                <h4>Streaming output</h4>
+                <p className="muted">“Analyzing...” typing effect shows deltas as they arrive.</p>
+              </div>
+              <div className="preview-card">
+                <h4>Charts</h4>
+                <p className="muted">Recharts line and pie visualizations for price and portfolio mix.</p>
+              </div>
+              <div className="preview-card">
+                <h4>Saved history</h4>
+                <p className="muted">Persisted analyses and watchlists tied to your auth token.</p>
+              </div>
+            </div>
+          </section>
+
+          <footer className="landing-footer">
+            <div className="footer-left">
+              <strong>FinSight AI</strong>
+              <p className="muted">Built for investors who want realtime, explainable AI.</p>
+            </div>
+            <div className="footer-right">
+              <a onClick={() => navigate("/login")}>Login</a>
+              <a onClick={() => navigate("/dashboard")}>Dashboard</a>
+              <a href="mailto:team@finsight.ai">Contact</a>
+            </div>
+          </footer>
+        </div>
+      </>
+    );
+  }
+
+  if (!isAuthenticated && isLoginPage) {
+    return (
+      <>
+        {overlay}
+        {toastStack}
+        <div className="auth-shell">
+          <div className="auth-hero-card">
+            <div className="auth-hero-top">
+              <p className="hero-kicker">FinSight AI</p>
+              <span className="badge glow">Private Beta</span>
+            </div>
+            <h1 className="hero-title">Secure Research Workspace</h1>
+            <p className="hero-copy">
+              Log in to unlock streaming analysis, portfolio diagnostics, alerts, and a personal notebook. New users should create an account first—then you’ll be redirected into the full console.
+            </p>
+            <div className="auth-bullets">
+              <span className="pill">Streaming agent trace</span>
+              <span className="pill">Portfolio QA</span>
+              <span className="pill">Smart alerts</span>
+              <span className="pill">Notebook saves</span>
+            </div>
+            <div className="auth-stats">
+              <article>
+                <small>Avg response</small>
+                <strong>~1.2s</strong>
+              </article>
+              <article>
+                <small>Coverage</small>
+                <strong>India + US</strong>
+              </article>
+              <article>
+                <small>Security</small>
+                <strong>Session JWT</strong>
+              </article>
+            </div>
           </div>
-          {authMode === "register" ? (
-            <input
-              value={authName}
-              onChange={(event) => setAuthName(event.target.value)}
-              placeholder="Full name"
-              disabled={authBusy || authChecking}
-              minLength={2}
-              required
-            />
-          ) : null}
-          {authFieldErrors.name ? <p className="input-hint error">{authFieldErrors.name}</p> : null}
-          <input
-            value={authEmail}
-            onChange={(event) => setAuthEmail(event.target.value)}
-            placeholder="Email"
-            disabled={authBusy || authChecking}
-            minLength={MIN_EMAIL_LENGTH}
-            required
-            type="email"
-          />
-          {authFieldErrors.email ? <p className="input-hint error">{authFieldErrors.email}</p> : null}
-          <input
-            type="password"
-            value={authPassword}
-            onChange={(event) => setAuthPassword(event.target.value)}
-            placeholder={`Password (min ${MIN_PASSWORD_LENGTH} chars)`}
-            disabled={authBusy || authChecking}
-            minLength={MIN_PASSWORD_LENGTH}
-            required
-          />
-          {authFieldErrors.password ? <p className="input-hint error">{authFieldErrors.password}</p> : null}
-          <div className="auth-actions">
-            <button
-              type="submit"
-              disabled={
-                authBusy ||
-                authChecking ||
-                !authEmail ||
-                !authPassword ||
-                (authMode === "register" && !authName)
-              }
-            >
-              {authChecking ? "Restoring session..." : authMode === "register" ? "Create account" : "Login"}
-            </button>
-            {authMode === "login" ? (
+          <form className="auth-card auth-gate" onSubmit={handleAuthSubmit}>
+            <div className="toggle-row">
               <button
                 type="button"
-                className="ghost-button strong"
-                onClick={() => {
-                  setAuthMode("register");
-                  setAuthError(null);
-                }}
-              >
-                Create account
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="ghost-button"
+                className={`toggle-chip ${authMode === "login" ? "active" : ""}`}
                 onClick={() => {
                   setAuthMode("login");
                   setAuthError(null);
+                  setAuthFieldErrors({});
                 }}
               >
-                Back to login
+                Login
               </button>
-            )}
-          </div>
-          {authError ? <div className="error-banner">{authError}</div> : null}
-          <p className="auth-note">Only authenticated users can access the workspace. Passwords must be at least 8 characters.</p>
-        </form>
-      </div>
+              <button
+                type="button"
+                className={`toggle-chip ${authMode === "register" ? "active" : ""}`}
+                onClick={() => {
+                  setAuthMode("register");
+                  setAuthError(null);
+                  setAuthFieldErrors({});
+                }}
+              >
+                Signup
+              </button>
+            </div>
+            {authMode === "register" ? (
+              <input
+                value={authName}
+                onChange={(event) => setAuthName(event.target.value)}
+                placeholder="Full name"
+                disabled={authBusy || authChecking}
+                minLength={2}
+                required
+              />
+            ) : null}
+            {authFieldErrors.name ? <p className="input-hint error">{authFieldErrors.name}</p> : null}
+            <input
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+              placeholder="Email"
+              disabled={authBusy || authChecking}
+              minLength={MIN_EMAIL_LENGTH}
+              required
+              type="email"
+            />
+            {authFieldErrors.email ? <p className="input-hint error">{authFieldErrors.email}</p> : null}
+            <input
+              type="password"
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder={`Password (min ${MIN_PASSWORD_LENGTH} chars)`}
+              disabled={authBusy || authChecking}
+              minLength={MIN_PASSWORD_LENGTH}
+              required
+            />
+            {authFieldErrors.password ? <p className="input-hint error">{authFieldErrors.password}</p> : null}
+            <div className="auth-actions">
+              <button
+                type="submit"
+                disabled={
+                  authBusy ||
+                  authChecking ||
+                  !authEmail ||
+                  !authPassword ||
+                  (authMode === "register" && !authName)
+                }
+              >
+                {authChecking ? "Restoring session..." : authMode === "register" ? "Create account" : "Login"}
+              </button>
+              {authMode === "login" ? (
+                <button
+                  type="button"
+                  className="ghost-button strong"
+                  onClick={() => {
+                    setAuthMode("register");
+                    setAuthError(null);
+                  }}
+                >
+                  Create account
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setAuthError(null);
+                  }}
+                >
+                  Back to login
+                </button>
+              )}
+            </div>
+            {authError ? <div className="error-banner">{authError}</div> : null}
+            <p className="auth-note">Only authenticated users can access the workspace. Passwords must be at least 8 characters.</p>
+          </form>
+        </div>
+      </>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        {overlay}
+        {toastStack}
+      </>
     );
   }
 
   return (
+    <>
+      {overlay}
+      {toastStack}
+      <div className={`dashboard-shell ${sidebarCollapsed ? "collapsed" : "open"}`}>
+        <aside className={`dashboard-sidebar ${sidebarCollapsed ? "collapsed" : "open"}`}>
+          <div className="sidebar-logo">
+            <button
+              type="button"
+              className="icon-button sidebar-toggle"
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              ☰
+            </button>
+            <span className="sidebar-brand">FinSight</span>
+          </div>
+          <ul className="sidebar-links">
+            <li className="active"><span className="label">Dashboard</span></li>
+            <li><span className="label">Analyze</span></li>
+            <li><span className="label">Portfolio</span></li>
+            <li><span className="label">Alerts</span></li>
+            <li><span className="label">Settings</span></li>
+          </ul>
+          <div className="sidebar-foot">
+            <div className="status-row">
+              <span className={`status-dot status-${health}`} />
+              <span className="muted">Backend {health === "ok" ? "online" : health}</span>
+            </div>
+            <p className="muted">Triggered alerts: {triggeredAlerts}</p>
+          </div>
+        </aside>
+        <div className="dashboard-main">
+          <header className="dashboard-topbar">
+            <div>
+              <p className="eyebrow">Welcome back</p>
+              <h2>Command center</h2>
+              <p className="panel-subcopy">Streaming AI output, charts, alerts, and saved history in one view.</p>
+            </div>
+            <div className="topbar-actions">
+              <button type="button" className="ghost-button" onClick={toggleTheme}>
+                {theme === "light" ? "Dark mode" : "Light mode"}
+              </button>
+              <button type="button" className="ghost-button" onClick={() => void pingHealth()}>
+                Check status
+              </button>
+              <button type="button" className="ghost-button" onClick={() => copyShareLink()} disabled={!analysis}>
+                Copy link
+              </button>
+              <button type="button" className="ghost-button" onClick={handleLogout}>
+                Logout
+              </button>
+              <div className="nav-user">
+                <div className="nav-avatar">{user?.name?.charAt(0) ?? "F"}</div>
+                <div>
+                  <strong>{user?.name ?? "Authenticated"}</strong>
+                  <p>{user?.email ?? "user@finsight.ai"}</p>
+                </div>
+              </div>
+            </div>
+          </header>
     <div className="app-shell">
       <div className="command-bar">
         <div className="command-left">
@@ -585,6 +1014,12 @@ export default function App() {
           {analysis ? <span className="command-pill neutral">Active {analysis.stock.ticker}</span> : null}
         </div>
         <div className="command-actions">
+          <button type="button" className="ghost-button" onClick={() => copyShareLink()} disabled={!analysis}>
+            Copy share link
+          </button>
+          <button type="button" className="ghost-button" onClick={() => exportPDF()} disabled={!analysis}>
+            Export PDF
+          </button>
           <button type="button" className="ghost-button" onClick={() => void pingHealth()}>
             Recheck
           </button>
@@ -598,15 +1033,26 @@ export default function App() {
       </div>
       <header className="hero">
         <div className="hero-main">
+          <div className="hero-badge-chip">
+            <span className="dot-new" />
+            <span>NEW</span>
+            <span>AI Research Console</span>
+          </div>
           <p className="hero-kicker">Stock Research Workspace</p>
           <div className="hero-title-row">
-            <h1 className="hero-title">FinSight AI</h1>
-            <span className="hero-badge">Operator Console</span>
+            <h1 className="hero-title">Intelligence That Drives Better Decisions</h1>
           </div>
           <p className="hero-copy">
-            A multi-agent investment decision workspace that combines live market data, explainable AI, portfolio diagnostics,
-            alerts, user memory, and streaming execution in one industry-style interface.
+            Connects research, streaming AI, and portfolio risk into one live command center with instant alerts and memory.
           </p>
+          <div className="hero-ctas">
+            <button type="button" className="cta-primary" onClick={() => navigate("/dashboard")}>
+              Get started
+            </button>
+            <button type="button" className="cta-ghost" onClick={() => navigate("/login")}>
+              Login
+            </button>
+          </div>
           <div className="hero-strip">
             <span className="hero-pill">Decision Engine</span>
             <span className="hero-pill">Explainable AI</span>
@@ -725,6 +1171,20 @@ export default function App() {
               </button>
             ))}
           </div>
+          <div className="action-grid">
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className="action-chip"
+                onClick={() => runQuickAction(action.id)}
+                disabled={isLoading || !analysis}
+                title="Runs against the active ticker"
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
           <div className="chat-stream-shell">
             <div className="chat-stream">
               {messages.map((message) => (
@@ -737,7 +1197,10 @@ export default function App() {
                       </span>
                     ) : null}
                   </div>
-                  <p>{message.content}</p>
+                  <p className={message.id === streamingMessageId ? "streaming-line" : ""}>
+                    {message.content}
+                    {message.id === streamingMessageId ? <span className="cursor">|</span> : null}
+                  </p>
                 </article>
               ))}
             </div>
@@ -753,11 +1216,39 @@ export default function App() {
             <textarea id="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Example: Should I buy TCS now?" rows={3} disabled={isLoading} />
             <div className="composer-actions">
               <p>Streaming exposes the full agent pipeline in real time.</p>
-              <button type="submit" disabled={isLoading || !query.trim()}>
+              <button type="submit" className="primary-button" disabled={isLoading || !query.trim()}>
                 {isLoading ? "Analyzing..." : "Run analysis"}
               </button>
             </div>
           </form>
+          <div className="tag-bar">
+            <div className="tag-input-wrap">
+              <input
+                value={tagInput}
+                onChange={(event) => setTagInput(event.target.value)}
+                placeholder="Add a tag (e.g., earnings, breakout)"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTag();
+                  }
+                }}
+              />
+              <button type="button" className="ghost-button" onClick={() => addTag()}>
+                Add tag
+              </button>
+            </div>
+            <div className="tag-list">
+              {tags.map((tag) => (
+                <span key={tag.id} className="tag-chip">
+                  {tag.label}
+                  <button type="button" className="icon-button" onClick={() => removeTag(tag.id)}>
+                    x
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
           <article className="detail-card status-card">
             <div className="detail-card-header">
               <h3>Streaming Trace</h3>
@@ -838,6 +1329,28 @@ export default function App() {
                   <p>Signal-derived risk composite</p>
                 </article>
               </div>
+
+              <article className="detail-card chart-card">
+                <div className="detail-card-header">
+                  <h3>Trend chart</h3>
+                  <span>{trendChartData.length ? `${trendChartData.length} points` : "Awaiting data"}</span>
+                </div>
+                {trendChartData.length ? (
+                  <div className="chart-wrapper">
+                    <ResponsiveContainer width="100%" height={260}>
+                      <LineChart data={trendChartData} margin={{ top: 12, right: 12, left: 0, bottom: 6 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                        <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 11 }} />
+                        <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} domain={["auto", "auto"]} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="close" stroke="#0ea5e9" strokeWidth={2.2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="placeholder">Run an analysis to render the live chart.</p>
+                )}
+              </article>
               <article className="decision-card">
                 <div className="decision-topline">
                   <div>
@@ -972,14 +1485,7 @@ export default function App() {
               <p className="panel-subcopy">Persist history, watchlist decisions, and smart alerts against a user session.</p>
             </div>
             {user ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setAuthToken(null);
-                  setAuthError(null);
-                }}
-              >
+              <button type="button" className="secondary-button" onClick={handleLogout}>
                 Logout
               </button>
             ) : null}
@@ -1008,10 +1514,26 @@ export default function App() {
               </article>
               <article className="detail-card">
                 <div className="detail-card-header">
-                  <h3>Recent History</h3>
+                  <h3>Past analyses</h3>
                 </div>
-                <ul className="detail-list compact-list">
-                  {historyLabels.length ? historyLabels.map((item) => <li key={item}>{item}</li>) : <li>Run an authenticated analysis to build memory.</li>}
+                <ul className="detail-list compact-list history-list">
+                  {historyItems.length ? (
+                    historyItems.slice(0, 6).map((item) => (
+                      <li key={item.analysis_id}>
+                        <div className="history-row">
+                          <div>
+                            <strong>{item.ticker}</strong> {item.recommendation.toUpperCase()} â€¢ {Math.round(item.confidence * 100)}%
+                            <span className="history-date">{new Date(item.created_at).toLocaleString()}</span>
+                          </div>
+                          <button type="button" className="ghost-button" onClick={() => void submitQuery(item.query)}>
+                            Re-run
+                          </button>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li>Run an authenticated analysis to build memory.</li>
+                  )}
                 </ul>
               </article>
             </>
@@ -1024,7 +1546,7 @@ export default function App() {
               {authMode === "register" ? <input value={authName} onChange={(event) => setAuthName(event.target.value)} placeholder="Full name" /> : null}
               <input value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="Email" />
               <input type="password" value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} placeholder="Password" />
-              <button type="submit" disabled={!authEmail || !authPassword || (authMode === "register" && !authName)}>
+              <button type="submit" className="primary-button" disabled={!authEmail || !authPassword || (authMode === "register" && !authName)}>
                 {authMode === "register" ? "Create account" : "Login"}
               </button>
             </form>
@@ -1041,7 +1563,7 @@ export default function App() {
           </div>
           <div className="auth-form">
             <textarea value={portfolioInput} onChange={(event) => setPortfolioInput(event.target.value)} placeholder="TCS, RELIANCE, INFY" rows={3} />
-            <button type="button" onClick={() => void handlePortfolioAnalyze()} disabled={portfolioLoading || !portfolioInput.trim()}>
+            <button type="button" className="primary-button" onClick={() => void handlePortfolioAnalyze()} disabled={portfolioLoading || !portfolioInput.trim()}>
               {portfolioLoading ? "Analyzing..." : "Analyze portfolio"}
             </button>
           </div>
@@ -1069,6 +1591,26 @@ export default function App() {
                   <p>{portfolioResult.overexposed_tickers.join(", ") || "Balanced"}</p>
                 </article>
               </div>
+              {portfolioChartData.length ? (
+                <article className="detail-card chart-card">
+                  <div className="detail-card-header">
+                    <h3>Portfolio mix</h3>
+                    <span>{portfolioChartData.length} holdings</span>
+                  </div>
+                  <div className="chart-wrapper pie-wrapper">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie data={portfolioChartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={3}>
+                          {portfolioChartData.map((entry, index) => (
+                            <Cell key={entry.name} fill={chartPalette[index % chartPalette.length]} />
+                          ))}
+                        </Pie>
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </article>
+              ) : null}
               <article className="detail-card">
                 <div className="detail-card-header">
                   <h3>Holdings</h3>
@@ -1114,7 +1656,7 @@ export default function App() {
                   <option value="percent_drop">Percent drop</option>
                 </select>
                 <input value={alertThreshold} onChange={(event) => setAlertThreshold(event.target.value)} placeholder={alertType === "percent_drop" ? "5" : "950"} />
-                <button type="button" onClick={() => void handleCreateAlert()} disabled={alertsLoading || !alertThreshold.trim()}>
+                <button type="button" className="primary-button" onClick={() => void handleCreateAlert()} disabled={alertsLoading || !alertThreshold.trim()}>
                   {alertsLoading ? "Saving..." : `Create on ${analysis.stock.ticker}`}
                 </button>
               </div>
@@ -1159,7 +1701,7 @@ export default function App() {
                     <strong>{entry.analysis.stock.ticker}</strong>
                     <span>{entry.analysis.stock.company_name}</span>
                     <span className="notebook-meta">
-                      {entry.analysis.decision?.decision ?? entry.analysis.recommendation} •{" "}
+                      {entry.analysis.decision?.decision ?? entry.analysis.recommendation} â€¢{" "}
                       {new Date(entry.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -1184,6 +1726,16 @@ export default function App() {
           )}
         </article>
       </section>
+      </div>
     </div>
+  </div>
+    </>
   );
 }
+
+
+
+
+
+
+
