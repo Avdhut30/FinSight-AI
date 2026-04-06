@@ -226,3 +226,10 @@ class UserHistoryItem(BaseModel):
 
 class UserHistoryResponse(BaseModel):
     items: list[UserHistoryItem] = Field(default_factory=list)
+
+
+class AdminUserSummary(BaseModel):
+    id: str
+    email: str
+    name: str
+    created_at: datetime

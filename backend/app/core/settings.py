@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     default_watchlist: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["INFY.NS"]
     )
+    admin_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -60,6 +61,13 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [item.upper() for item in cls._parse_string_list(value)]
         return [item.upper() for item in value]
+
+    @field_validator("admin_emails", mode="before")
+    @classmethod
+    def parse_admin_emails(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [item.lower() for item in cls._parse_string_list(value)]
+        return [item.lower() for item in value]
 
     @staticmethod
     def _parse_string_list(value: str) -> list[str]:

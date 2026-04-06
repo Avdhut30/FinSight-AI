@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.dependencies import (
@@ -22,6 +23,7 @@ from app.models.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
     AuthResponse,
+    AdminUserSummary,
     PortfolioAnalysisResponse,
     PortfolioAnalyzeRequest,
     SavedWatchlistResponse,
@@ -33,6 +35,7 @@ from app.models.schemas import (
     WatchlistUpdateRequest,
 )
 from app.repositories.analysis_repository import get_analysis
+from app.db.models import UserRecord
 from app.services.stock_service import StockService
 
 logger = logging.getLogger(__name__)
@@ -61,6 +64,14 @@ def _require_user(db: Session, auth_service, authorization: Optional[str]):
     user = _resolve_optional_user(db, auth_service, authorization)
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication required.")
+    return user
+
+
+def _require_admin(db: Session, auth_service, settings, authorization: Optional[str]):
+    user = _require_user(db, auth_service, authorization)
+    allowed = {email.lower() for email in settings.admin_emails}
+    if not allowed or user.email.lower() not in allowed:
+        raise HTTPException(status_code=403, detail="Admin access required.")
     return user
 
 
@@ -235,3 +246,27 @@ async def list_alerts(
 ):
     user = _require_user(db, auth_service, authorization)
     return await alert_service.list_alerts(db, user.id)
+
+
+@router.get("/admin/users", response_model=list[AdminUserSummary])
+async def list_users(
+    db: Session = Depends(get_db),
+    auth_service=Depends(get_auth_service),
+    settings=Depends(get_settings),
+    authorization: Optional[str] = Header(default=None),
+):
+    _require_admin(db, auth_service, settings, authorization)
+    rows = (
+        db.execute(select(UserRecord).order_by(UserRecord.created_at.desc()))
+        .scalars()
+        .all()
+    )
+    return [
+        AdminUserSummary(
+            id=row.id,
+            email=row.email,
+            name=row.name,
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
