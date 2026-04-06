@@ -4,6 +4,7 @@ import type {
   AuthResponse,
   PortfolioAnalysisResponse,
   SavedWatchlistResponse,
+  StockSnapshot,
   UserHistoryResponse,
   UserProfile,
   WatchlistResponse
@@ -277,4 +278,8 @@ export function fetchAlerts(token: string): Promise<AlertResponse[]> {
 
 export function healthCheck(): Promise<{ status: string }> {
   return request<{ status: string }>("/api/v1/health");
+}
+
+export function fetchIndices(): Promise<StockSnapshot[]> {
+  return request<StockSnapshot[]>("/api/v1/indices");
 }

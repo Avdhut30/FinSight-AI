@@ -1988,6 +1988,70 @@ select::placeholder {
   color: #0f172a;
 }
 
+.index-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 6px 0 32px;
+}
+
+.index-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.index-chip .muted {
+  display: block;
+  font-size: 12px;
+}
+
+.index-metrics {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.index-metrics .price {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.index-metrics .pct {
+  font-weight: 700;
+}
+
+.index-metrics .pct.up {
+  color: #15803d;
+}
+
+.index-metrics .pct.down {
+  color: #b91c1c;
+}
+
+.index-chip.skeleton {
+  justify-content: flex-start;
+  color: #94a3b8;
+  font-weight: 600;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .landing-section {
   margin: 52px 0;
 }

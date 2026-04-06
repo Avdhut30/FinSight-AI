@@ -27,6 +27,7 @@ from app.models.schemas import (
     PortfolioAnalysisResponse,
     PortfolioAnalyzeRequest,
     SavedWatchlistResponse,
+    StockSnapshot,
     UserHistoryResponse,
     UserLoginRequest,
     UserProfileResponse,
@@ -246,6 +247,12 @@ async def list_alerts(
 ):
     user = _require_user(db, auth_service, authorization)
     return await alert_service.list_alerts(db, user.id)
+
+
+@router.get("/indices", response_model=list[StockSnapshot])
+async def get_indices(stock_service: StockService = Depends(get_stock_service)):
+    # NIFTY 50 (^NSEI) and SENSEX (^BSESN) via Yahoo/TwelveData fallback
+    return await stock_service.get_watchlist(["^NSEI", "^BSESN"])
 
 
 @router.get("/admin/users", response_model=list[AdminUserSummary])

@@ -10,6 +10,7 @@ import {
   fetchCurrentUser,
   fetchSavedWatchlist,
   fetchUserHistory,
+  fetchIndices,
   loginUser,
   healthCheck,
   registerUser,
@@ -64,6 +65,10 @@ const focusOptions = [
   { id: "fundamental", label: "Fundamental", prompt: "Earnings quality, margins, balance sheet, valuation." },
   { id: "sentiment", label: "Sentiment", prompt: "News tone, flows, and positioning shifts." }
 ];
+const indexLabels: Record<string, string> = {
+  "^NSEI": "NIFTY 50",
+  "^BSESN": "SENSEX"
+};
 const chartPalette = ["#0ea5e9", "#16a34a", "#f97316", "#8b5cf6", "#ef4444", "#22d3ee"];
 const inrFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 
@@ -138,6 +143,8 @@ export default function App() {
   const [alertType, setAlertType] = useState<"price_above" | "price_below" | "percent_drop">("price_below");
   const [alertThreshold, setAlertThreshold] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [indices, setIndices] = useState<StockSnapshot[]>([]);
+  const [indicesLoading, setIndicesLoading] = useState(false);
 
   function pushStatus(message: string) {
     setStatusLog((current) => (current[current.length - 1] === message ? current : [...current, message].slice(-8)));
@@ -243,6 +250,14 @@ export default function App() {
     void pingHealth();
     const id = window.setInterval(() => void pingHealth(), 60000);
     return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    setIndicesLoading(true);
+    fetchIndices()
+      .then((data) => setIndices(data))
+      .catch(() => pushToast("Could not load index data", "error"))
+      .finally(() => setIndicesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -689,6 +704,30 @@ export default function App() {
               </div>
             </div>
           </header>
+
+          <div className="index-strip">
+            {(indicesLoading || !indices.length) && (
+              <div className="index-chip skeleton">Loading indices...</div>
+            )}
+            {!indicesLoading &&
+              indices.map((item) => {
+                const label = indexLabels[item.ticker] ?? item.ticker;
+                return (
+                  <div key={item.ticker} className="index-chip">
+                    <div>
+                      <strong>{label}</strong>
+                      <span className="muted">{item.ticker}</span>
+                    </div>
+                    <div className="index-metrics">
+                      <span className="price">{item.current_price?.toFixed(2) ?? "—"}</span>
+                      <span className={`pct ${item.day_change_percent && item.day_change_percent >= 0 ? "up" : "down"}`}>
+                        {formatSignedPercent(item.day_change_percent)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
 
           <section className="landing-section">
             <div className="section-head">
