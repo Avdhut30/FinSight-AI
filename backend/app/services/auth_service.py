@@ -40,11 +40,13 @@ class AuthService:
         if user is None or not self._verify_password(password, user.password_hash):
             raise ValueError("Invalid email or password.")
 
-        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=self.settings.auth_session_hours)
+        token = self._sign_token(user.id, expires_at)
+        # Optional: persist for audit, but not required for validation (stateless token)
         session = SessionRecord(
             user_id=user.id,
             token_hash=self._hash_token(token),
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=self.settings.auth_session_hours),
+            expires_at=expires_at,
         )
         db.add(session)
         db.commit()
@@ -54,18 +56,10 @@ class AuthService:
         if not token:
             return None
 
-        now = datetime.now(timezone.utc)
-        token_hash = self._hash_token(token)
-        session = db.execute(
-            select(SessionRecord).where(
-                SessionRecord.token_hash == token_hash,
-                SessionRecord.expires_at > now,
-            )
-        ).scalar_one_or_none()
-        if session is None:
+        user_id, expires_at = self._verify_signed_token(token)
+        if user_id is None or expires_at < datetime.now(timezone.utc):
             return None
-
-        return db.get(UserRecord, session.user_id)
+        return db.get(UserRecord, user_id)
 
     def list_watchlist(self, db: Session, user_id: str) -> list[WatchlistItemResponse]:
         rows = db.execute(
@@ -143,6 +137,27 @@ class AuthService:
 
     def _hash_token(self, token: str) -> str:
         return hmac.new(self.settings.auth_secret.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    def _sign_token(self, user_id: str, expires_at: datetime) -> str:
+        payload = f"{user_id}.{int(expires_at.timestamp())}.{secrets.token_hex(8)}"
+        signature = hmac.new(self.settings.auth_secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        return f"{payload}.{signature}"
+
+    def _verify_signed_token(self, token: str) -> tuple[Optional[str], Optional[datetime]]:
+        parts = token.split(".")
+        if len(parts) < 4:
+            return None, None
+        signature = parts[-1]
+        payload = ".".join(parts[:-1])
+        expected = hmac.new(self.settings.auth_secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            return None, None
+        try:
+            user_id, exp_ts, _nonce = payload.split(".", 2)
+            expires_at = datetime.fromtimestamp(int(exp_ts), tz=timezone.utc)
+            return user_id, expires_at
+        except Exception:
+            return None, None
 
     @staticmethod
     def _normalize_ticker(ticker: str) -> str:
